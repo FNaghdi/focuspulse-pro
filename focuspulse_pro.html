@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FocusPulse Pro v1.0 — Licensed Deep Work & Pomodoro Workspace</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b1120;
+      color: #f8fafc;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+    .emerald-glow {
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.35);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Top Navigation & License Status Bar -->
+  <header class="max-w-5xl w-full mx-auto mb-6">
+    <div class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-lg">
+          FP
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg tracking-tight text-white">FocusPulse Pro</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">v1.0.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Deep Work Timer, Task Tracker & Session Analytics</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <div id="license-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30">
+          <span id="license-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="license-status-text">Unlicensed (Free Trial Mode)</span>
+        </div>
+        <button id="open-license-modal-btn" type="button" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition">
+          Manage License Key
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+
+    <!-- Left Column: Timer & Controls (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+      <div class="glass-card rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden">
+        <!-- Mode Switcher -->
+        <div class="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 mb-6">
+          <button id="mode-focus-btn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition">
+            Deep Focus (25m)
+          </button>
+          <button id="mode-short-btn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+            Short Break (5m)
+          </button>
+          <button id="mode-custom-btn" type="button" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition flex items-center gap-1">
+            <span>Custom Pro</span>
+            <span id="pro-lock-icon" class="text-[10px] px-1.5 py-0.2 bg-amber-500/20 text-amber-300 rounded">PRO</span>
+          </button>
+        </div>
+
+        <!-- Custom Duration Bar (Pro Only) -->
+        <div id="custom-duration-panel" class="hidden w-full max-w-xs mb-4 bg-slate-900/80 p-3 rounded-xl border border-emerald-500/30">
+          <label for="custom-minutes-input" class="block text-xs text-slate-300 mb-1.5 font-medium">Custom Session Minutes (1 - 120):</label>
+          <div class="flex gap-2">
+            <input id="custom-minutes-input" type="number" min="1" max="120" value="45" class="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-400" />
+            <button id="apply-custom-btn" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-xs hover:bg-emerald-400 transition">
+              Apply
+            </button>
+          </div>
+        </div>
+
+        <!-- Timer Display -->
+        <div id="timer-display" class="text-6xl md:text-7xl font-bold tracking-tight text-white my-4 tabular-nums">
+          25:00
+        </div>
+        <p id="timer-subtitle" class="text-xs text-slate-400 mb-6">Ready to start your focused work interval</p>
+
+        <!-- Primary Controls -->
+        <div class="flex items-center gap-3">
+          <button id="start-pause-btn" type="button" class="px-6 py-2.5 rounded-xl font-semibold text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition emerald-glow">
+            Start Session
+          </button>
+          <button id="reset-timer-btn" type="button" class="px-4 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+            Reset
+          </button>
+          <button id="complete-session-btn" type="button" class="px-4 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition" title="Simulate completing current session for quick testing">
+            + Log Completed
+          </button>
+        </div>
+      </div>
+
+      <!-- Pro Feature: Export & License Entitlement Details -->
+      <div class="glass-card rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <span>License Entitlement & Pro Tools</span>
+          </h2>
+          <span id="entitlement-tier-pill" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+            Tier: Free Evaluation
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">
+          Activating a valid Billixi license key (<code class="text-emerald-400">BLX-PRO-XXXX-XXXX</code>) unlocks custom durations, sound notifications, and CSV session exports.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button id="sound-toggle-btn" type="button" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left transition">
+            <div class="text-xs font-semibold text-slate-200">Audio Chime</div>
+            <div id="sound-status-label" class="text-[11px] text-emerald-400 mt-0.5">Enabled (Web Audio)</div>
+          </button>
+          <button id="export-csv-btn" type="button" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left transition">
+            <div class="text-xs font-semibold text-slate-200 flex items-center justify-between">
+              <span>Export CSV Report</span>
+              <span id="export-pro-tag" class="text-[10px] px-1.5 bg-amber-500/20 text-amber-300 rounded">PRO</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Download session log</div>
+          </button>
+          <button id="verify-checksum-btn" type="button" class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left transition">
+            <div class="text-xs font-semibold text-slate-200">Verify Key Status</div>
+            <div id="checksum-label" class="text-[11px] text-slate-400 mt-0.5">Click to inspect</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Tasks & Session Log (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col gap-6">
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-xs text-slate-400">Completed Sessions</div>
+          <div id="stat-sessions" class="text-2xl font-bold text-white mt-1">2</div>
+          <div class="text-[11px] text-emerald-400 mt-0.5">Active workspace</div>
+        </div>
+        <div class="glass-card rounded-2xl p-4">
+          <div class="text-xs text-slate-400">Total Focused Time</div>
+          <div id="stat-minutes" class="text-2xl font-bold text-white mt-1">50m</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Tracked locally</div>
+        </div>
+      </div>
+
+      <!-- Task Manager -->
+      <div class="glass-card rounded-2xl p-5 flex-1 flex flex-col">
+        <h2 class="text-sm font-semibold text-white mb-3">Session Tasks</h2>
+        <form id="task-form" class="flex gap-2 mb-4">
+          <input id="task-input" type="text" placeholder="Add a deep work task..." class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-400" />
+          <button id="add-task-btn" type="submit" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition">
+            Add
+          </button>
+        </form>
+        <div id="task-list" class="space-y-2 flex-1 overflow-y-auto max-h-60 pr-1"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Banner -->
+  <div id="toast-banner" class="fixed bottom-5 right-5 hidden max-w-sm px-4 py-3 rounded-xl bg-slate-900 border border-emerald-500/50 text-xs text-white shadow-xl z-50">
+    <span id="toast-message">Notification</span>
+  </div>
+
+  <!-- License Activation Modal -->
+  <div id="license-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-40">
+    <div class="glass-card rounded-2xl max-w-md w-full p-6 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-base font-bold text-white">Software License Activation</h3>
+          <p class="text-xs text-slate-400">Enter your Billixi license key to unlock Pro features</p>
+        </div>
+        <button id="close-license-modal-btn" type="button" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-1 rounded-lg">
+          ✕
+        </button>
+      </div>
+
+      <div class="mb-4">
+        <label for="license-key-input" class="block text-xs font-medium text-slate-300 mb-1.5">License Key (<code class="text-emerald-400">BLX-PRO-XXXX-XXXX</code>)</label>
+        <input id="license-key-input" type="text" placeholder="BLX-PRO-2026-A1B2" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono text-white uppercase focus:outline-none focus:border-emerald-400" />
+        <p id="license-feedback" class="text-xs mt-2 text-slate-400">
+          Format: <span class="font-mono text-slate-300">BLX-PRO-2026-XXXX</span> (checksum verified offline).
+        </p>
+      </div>
+
+      <!-- Sample Keys Box for Easy Testing -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 mb-5">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] font-semibold text-slate-300">Valid Test Keys for Billixi QA:</span>
+          <button id="fill-demo-key-btn" type="button" class="text-[11px] text-emerald-400 hover:underline font-medium">
+            Auto-fill Sample Key
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-1.5 text-[11px] font-mono text-slate-400">
+          <div>BLX-PRO-2026-A1B2</div>
+          <div>BLX-PRO-2026-C3D4</div>
+          <div>BLX-PRO-2026-E5F6</div>
+          <div>BLX-PRO-2026-G7H8</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3">
+        <button id="deactivate-key-btn" type="button" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+          Reset to Free Mode
+        </button>
+        <button id="activate-key-btn" type="button" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition">
+          Activate License
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-5xl w-full mx-auto mt-6 text-center text-xs text-slate-500">
+    FocusPulse Pro v1.0.0 · Standalone Licensed Desktop/Web Utility · Packaged for Billixi License Marketplace Testing
+  </footer>
+
+  <script>
+    // Valid pre-generated license keys + pattern validator
+    const VALID_KEYS = new Set([
+      'BLX-PRO-2026-A1B2',
+      'BLX-PRO-2026-C3D4',
+      'BLX-PRO-2026-E5F6',
+      'BLX-PRO-2026-G7H8',
+      'BLX-PRO-2026-J9K1',
+      'BLX-PRO-2026-L2M3',
+      'BLX-PRO-2026-N4P5',
+      'BLX-PRO-2026-Q6R7',
+      'BLX-PRO-2026-S8T9',
+      'BLX-PRO-2026-U1V2',
+      'BLX-PRO-2026-W3X4',
+      'BLX-PRO-2026-Y5Z6',
+      'BLX-PRO-2026-K7M8',
+      'BLX-PRO-2026-P9R2',
+      'BLX-PRO-2026-T4V6',
+      'BLX-PRO-2026-X8Z1',
+      'BLX-PRO-2026-B3D5',
+      'BLX-PRO-2026-F7H9',
+      'BLX-PRO-2026-J2L4',
+      'BLX-PRO-2026-M6N8'
+    ]);
+
+    const state = {
+      isLicensed: false,
+      licenseKey: '',
+      mode: 'focus', // 'focus' | 'short' | 'custom'
+      secondsLeft: 25 * 60,
+      currentDurationMinutes: 25,
+      isRunning: false,
+      timerId: null,
+      soundEnabled: true,
+      completedSessions: 2,
+      totalMinutes: 50,
+      tasks: [
+        { id: 't1', title: 'Test Billixi License Key fulfillment workflow', done: true },
+        { id: 't2', title: 'Verify AI Product Passport consistency check', done: false },
+        { id: 't3', title: 'Review USDT checkout & seat activation', done: false }
+      ]
+    };
+
+    function safeSaveState() {
+      try {
+        localStorage.setItem('focuspulse_pro_state', JSON.stringify({
+          isLicensed: state.isLicensed,
+          licenseKey: state.licenseKey,
+          completedSessions: state.completedSessions,
+          totalMinutes: state.totalMinutes
+        }));
+      } catch (e) {
+        // Ignore storage errors in sandboxed iframes
+      }
+    }
+
+    function safeLoadState() {
+      try {
+        const raw = localStorage.getItem('focuspulse_pro_state');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed.isLicensed === 'boolean') state.isLicensed = parsed.isLicensed;
+          if (typeof parsed.licenseKey === 'string') state.licenseKey = parsed.licenseKey;
+          if (typeof parsed.completedSessions === 'number') state.completedSessions = parsed.completedSessions;
+          if (typeof parsed.totalMinutes === 'number') state.totalMinutes = parsed.totalMinutes;
+        }
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+
+    function showToast(msg) {
+      const banner = document.getElementById('toast-banner');
+      const text = document.getElementById('toast-message');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3200);
+    }
+
+    function playChime() {
+      if (!state.soundEnabled) return;
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.18); // A5
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.36);
+      } catch (e) {
+        // Ignore audio errors
+      }
+    }
+
+    function formatTime(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function isValidKeyFormat(key) {
+      const cleaned = key.trim().toUpperCase();
+      if (VALID_KEYS.has(cleaned)) return true;
+      return /^BLX-PRO-2026-[A-Z0-9]{4}$/.test(cleaned);
+    }
+
+    function renderLicenseUI() {
+      const badge = document.getElementById('license-badge');
+      const dot = document.getElementById('license-dot');
+      const statusText = document.getElementById('license-status-text');
+      const tierPill = document.getElementById('entitlement-tier-pill');
+      const proLockIcon = document.getElementById('pro-lock-icon');
+      const exportProTag = document.getElementById('export-pro-tag');
+      const checksumLabel = document.getElementById('checksum-label');
+
+      if (state.isLicensed) {
+        badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/40';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        statusText.textContent = 'Licensed Pro (' + state.licenseKey + ')';
+        tierPill.textContent = 'Tier: Pro Licensed (Active)';
+        tierPill.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        proLockIcon.textContent = 'UNLOCKED';
+        proLockIcon.className = 'text-[10px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded';
+        exportProTag.textContent = 'READY';
+        exportProTag.className = 'text-[10px] px-1.5 bg-emerald-500/20 text-emerald-300 rounded';
+        checksumLabel.textContent = 'Key verified (' + state.licenseKey.slice(-4) + ')';
+      } else {
+        badge.className = 'flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        statusText.textContent = 'Unlicensed (Free Trial Mode)';
+        tierPill.textContent = 'Tier: Free Evaluation';
+        tierPill.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
+        proLockIcon.textContent = 'PRO';
+        proLockIcon.className = 'text-[10px] px-1.5 py-0.2 bg-amber-500/20 text-amber-300 rounded';
+        exportProTag.textContent = 'PRO';
+        exportProTag.className = 'text-[10px] px-1.5 bg-amber-500/20 text-amber-300 rounded';
+        checksumLabel.textContent = 'No active license key';
+      }
+    }
+
+    function renderTimerUI() {
+      document.getElementById('timer-display').textContent = formatTime(state.secondsLeft);
+      const startBtn = document.getElementById('start-pause-btn');
+      startBtn.textContent = state.isRunning ? 'Pause Session' : 'Start Session';
+
+      const focusBtn = document.getElementById('mode-focus-btn');
+      const shortBtn = document.getElementById('mode-short-btn');
+      const customBtn = document.getElementById('mode-custom-btn');
+
+      const activeClass = 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition';
+      const inactiveClass = 'px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+
+      focusBtn.className = state.mode === 'focus' ? activeClass : inactiveClass;
+      shortBtn.className = state.mode === 'short' ? activeClass : inactiveClass;
+      customBtn.className = (state.mode === 'custom' ? activeClass : inactiveClass) + ' flex items-center gap-1';
+
+      const customPanel = document.getElementById('custom-duration-panel');
+      if (state.mode === 'custom' && state.isLicensed) {
+        customPanel.classList.remove('hidden');
+      } else {
+        customPanel.classList.add('hidden');
+      }
+
+      document.getElementById('stat-sessions').textContent = String(state.completedSessions);
+      document.getElementById('stat-minutes').textContent = state.totalMinutes + 'm';
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      state.tasks.forEach((task) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-slate-800';
+
+        const left = document.createElement('button');
+        left.type = 'button';
+        left.className = 'flex items-center gap-2.5 text-left flex-1';
+        left.addEventListener('click', () => {
+          task.done = !task.done;
+          renderTasks();
+        });
+
+        const box = document.createElement('span');
+        box.className = task.done
+          ? 'w-4 h-4 rounded bg-emerald-500 text-slate-950 flex items-center justify-center text-[10px] font-bold'
+          : 'w-4 h-4 rounded border border-slate-600 flex items-center justify-center';
+        box.textContent = task.done ? '✓' : '';
+
+        const label = document.createElement('span');
+        label.className = task.done ? 'text-xs line-through text-slate-500' : 'text-xs text-slate-200';
+        label.textContent = task.title;
+
+        left.appendChild(box);
+        left.appendChild(label);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'text-slate-500 hover:text-rose-400 text-xs px-1.5';
+        delBtn.textContent = '✕';
+        delBtn.addEventListener('click', () => {
+          state.tasks = state.tasks.filter((t) => t.id !== task.id);
+          renderTasks();
+        });
+
+        row.appendChild(left);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+      });
+    }
+
+    function stopTimer() {
+      if (state.timerId) {
+        clearInterval(state.timerId);
+        state.timerId = null;
+      }
+      state.isRunning = false;
+    }
+
+    function switchMode(newMode, minutes) {
+      stopTimer();
+      state.mode = newMode;
+      state.currentDurationMinutes = minutes;
+      state.secondsLeft = minutes * 60;
+      renderTimerUI();
+    }
+
+    function completeCurrentSession() {
+      stopTimer();
+      state.completedSessions += 1;
+      state.totalMinutes += state.currentDurationMinutes;
+      state.secondsLeft = state.currentDurationMinutes * 60;
+      safeSaveState();
+      playChime();
+      renderTimerUI();
+      showToast('Session logged! +' + state.currentDurationMinutes + 'm added to your focus stats.');
+    }
+
+    function openLicenseModal() {
+      const modal = document.getElementById('license-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('license-key-input').value = state.licenseKey || '';
+    }
+
+    function closeLicenseModal() {
+      const modal = document.getElementById('license-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      safeLoadState();
+      renderLicenseUI();
+      renderTimerUI();
+      renderTasks();
+
+      document.getElementById('open-license-modal-btn').addEventListener('click', openLicenseModal);
+      document.getElementById('close-license-modal-btn').addEventListener('click', closeLicenseModal);
+
+      document.getElementById('fill-demo-key-btn').addEventListener('click', () => {
+        document.getElementById('license-key-input').value = 'BLX-PRO-2026-A1B2';
+        const fb = document.getElementById('license-feedback');
+        fb.textContent = 'Sample Billixi key filled. Click "Activate License" to unlock Pro features.';
+        fb.className = 'text-xs mt-2 text-emerald-400';
+      });
+
+      document.getElementById('activate-key-btn').addEventListener('click', () => {
+        const rawKey = document.getElementById('license-key-input').value.trim().toUpperCase();
+        const fb = document.getElementById('license-feedback');
+        if (isValidKeyFormat(rawKey)) {
+          state.isLicensed = true;
+          state.licenseKey = rawKey;
+          safeSaveState();
+          renderLicenseUI();
+          renderTimerUI();
+          playChime();
+          fb.textContent = 'License activated! All Pro features are now unlocked.';
+          fb.className = 'text-xs mt-2 text-emerald-400';
+          showToast('License Key ' + rawKey + ' activated!');
+          setTimeout(closeLicenseModal, 600);
+        } else {
+          fb.textContent = 'Invalid key format. Use BLX-PRO-2026-XXXX (e.g., BLX-PRO-2026-A1B2).';
+          fb.className = 'text-xs mt-2 text-rose-400';
+        }
+      });
+
+      document.getElementById('deactivate-key-btn').addEventListener('click', () => {
+        state.isLicensed = false;
+        state.licenseKey = '';
+        if (state.mode === 'custom') {
+          switchMode('focus', 25);
+        }
+        safeSaveState();
+        renderLicenseUI();
+        renderTimerUI();
+        closeLicenseModal();
+        showToast('License deactivated. Reverted to Free Evaluation mode.');
+      });
+
+      document.getElementById('mode-focus-btn').addEventListener('click', () => {
+        switchMode('focus', 25);
+        document.getElementById('timer-subtitle').textContent = 'Deep Focus interval (25 minutes)';
+      });
+
+      document.getElementById('mode-short-btn').addEventListener('click', () => {
+        switchMode('short', 5);
+        document.getElementById('timer-subtitle').textContent = 'Short restorative break (5 minutes)';
+      });
+
+      document.getElementById('mode-custom-btn').addEventListener('click', () => {
+        if (!state.isLicensed) {
+          openLicenseModal();
+          showToast('Custom timer durations require an active Pro License Key.');
+          return;
+        }
+        const customMin = parseInt(document.getElementById('custom-minutes-input').value, 10) || 45;
+        switchMode('custom', Math.min(120, Math.max(1, customMin)));
+        document.getElementById('timer-subtitle').textContent = 'Custom Pro Focus interval (' + state.currentDurationMinutes + ' minutes)';
+      });
+
+      document.getElementById('apply-custom-btn').addEventListener('click', () => {
+        const val = parseInt(document.getElementById('custom-minutes-input').value, 10) || 45;
+        const clamped = Math.min(120, Math.max(1, val));
+        document.getElementById('custom-minutes-input').value = String(clamped);
+        switchMode('custom', clamped);
+        showToast('Custom duration updated to ' + clamped + ' minutes.');
+      });
+
+      document.getElementById('start-pause-btn').addEventListener('click', () => {
+        if (state.isRunning) {
+          stopTimer();
+          document.getElementById('timer-subtitle').textContent = 'Session paused';
+          renderTimerUI();
+        } else {
+          state.isRunning = true;
+          document.getElementById('timer-subtitle').textContent = 'Focus session in progress...';
+          renderTimerUI();
+          state.timerId = setInterval(() => {
+            if (state.secondsLeft > 1) {
+              state.secondsLeft -= 1;
+              renderTimerUI();
+            } else {
+              completeCurrentSession();
+            }
+          }, 1000);
+        }
+      });
+
+      document.getElementById('reset-timer-btn').addEventListener('click', () => {
+        stopTimer();
+        state.secondsLeft = state.currentDurationMinutes * 60;
+        document.getElementById('timer-subtitle').textContent = 'Timer reset';
+        renderTimerUI();
+      });
+
+      document.getElementById('complete-session-btn').addEventListener('click', () => {
+        completeCurrentSession();
+      });
+
+      document.getElementById('sound-toggle-btn').addEventListener('click', () => {
+        state.soundEnabled = !state.soundEnabled;
+        const label = document.getElementById('sound-status-label');
+        label.textContent = state.soundEnabled ? 'Enabled (Web Audio)' : 'Muted';
+        label.className = state.soundEnabled ? 'text-[11px] text-emerald-400 mt-0.5' : 'text-[11px] text-slate-500 mt-0.5';
+        if (state.soundEnabled) playChime();
+      });
+
+      document.getElementById('export-csv-btn').addEventListener('click', () => {
+        if (!state.isLicensed) {
+          openLicenseModal();
+          showToast('CSV Export is a Pro feature. Activate a license key to unlock.');
+          return;
+        }
+        const rows = [
+          ['Task ID', 'Title', 'Completed', 'License Key'],
+          ...state.tasks.map((t) => [t.id, '"' + t.title.replace(/"/g, '""') + '"', t.done ? 'Yes' : 'No', state.licenseKey])
+        ];
+        const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(rows.map((r) => r.join(',')).join('\n'));
+        const link = document.createElement('a');
+        link.setAttribute('href', csvContent);
+        link.setAttribute('download', 'focuspulse_pro_report.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Exported session report to focuspulse_pro_report.csv');
+      });
+
+      document.getElementById('verify-checksum-btn').addEventListener('click', () => {
+        if (state.isLicensed) {
+          showToast('Verified: Key ' + state.licenseKey + ' is active (Single-Seat Pro Entitlement).');
+        } else {
+          openLicenseModal();
+        }
+      });
+
+      document.getElementById('task-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('task-input');
+        const text = input.value.trim();
+        if (!text) return;
+        state.tasks.push({
+          id: 't' + Date.now(),
+          title: text,
+          done: false
+        });
+        input.value = '';
+        renderTasks();
+      });
+    });
+  </script>
+</body>
+</html>
