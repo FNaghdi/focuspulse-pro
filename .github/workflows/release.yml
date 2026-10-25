@@ -1,1 +1,40 @@
+name: Build and Release with Provenance
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package FocusPulse Pro release archive
+        run: |
+          zip -r focuspulse_pro_v1.0.zip focuspulse_pro.html license_manager.py sample_license_keys.txt README.md
+
+      - name: Generate GitHub Build Provenance Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: focuspulse_pro_v1.0.zip
+
+      - name: Create GitHub Release and Upload Asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v1.0.0"
+          git tag -f "$TAG_NAME"
+          git push origin "$TAG_NAME" --force
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" focuspulse_pro_v1.0.zip --clobber
+          else
+            gh release create "$TAG_NAME" focuspulse_pro_v1.0.zip --title "FocusPulse Pro v1.0.0" --notes "Official FocusPulse Pro v1.0.0 release built with GitHub Actions and SLSA Build Provenance for Billixi."
+          fi
