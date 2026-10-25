@@ -1,79 +1,42 @@
-# Save as .github/workflows/release.yml
-name: Billixi release proof
+name: Build and Release with Provenance
+
 on:
+  push:
+    branches: [ main, master ]
+    tags: [ "v*" ]
   workflow_dispatch:
-    inputs:
-      version:
-        description: Release version
-        required: true
-        default: "1.0.1"
-        type: string
 
 permissions:
   contents: write
   id-token: write
-
-env:
-  BILLIXI_ARTIFACT_PATH: "dist/my-product.zip"
+  attestations: write
 
 jobs:
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Check release version
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ inputs.version }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package FocusPulse Pro release archive
         run: |
-          set -euo pipefail
-          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Use a version such as 1.0.0'; exit 1; }
-          if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo 'This version already exists. Run again with a new version.'
-            exit 1
-          fi
-      - name: Build the final artifact
-        shell: bash
-        run: |
-          # Enter your build commands in Billixi first.
-          exit 1
-      - name: Prove the exact build to Billixi
-        shell: python
+          zip -r focuspulse_pro_v1.0.zip focuspulse_pro.html license_manager.py sample_license_keys.txt README.md
+
+      - name: Generate GitHub Build Provenance Attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: focuspulse_pro_v1.0.zip
+
+      - name: Create GitHub Release and Upload Asset
         env:
-          BILLIXI_ARTIFACT_PATH: "dist/my-product.zip"
           BILLIXI_PRODUCT_ID: 49bb2985-7f3e-44c7-85c6-533b1bc4f27f
-          BILLIXI_PROOF_ENDPOINT: https://api.billixi.com/api/v1/payment/source-providers/github/actions/build-proofs
-          BILLIXI_AUDIENCE_PREFIX: billixi-source-trust
+          GH_TOKEN: \x24{{ secrets.GITHUB_TOKEN }}
         run: |
-          import hashlib, json, os, pathlib, urllib.parse, urllib.request
-          artifact = pathlib.Path(os.environ["BILLIXI_ARTIFACT_PATH"])
-          if not artifact.is_file() or artifact.stat().st_size == 0:
-              raise SystemExit("The finished artifact is missing or empty.")
-          digest = hashlib.sha256()
-          with artifact.open("rb") as stream:
-              for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-                  digest.update(chunk)
-          artifact_sha256 = digest.hexdigest()
-          product_id = os.environ["BILLIXI_PRODUCT_ID"]
-          audience = os.environ["BILLIXI_AUDIENCE_PREFIX"] + ":" + product_id.replace("-", "").lower() + ":" + artifact_sha256
-          request = urllib.request.Request(
-              os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"] + "&audience=" + urllib.parse.quote(audience, safe=""),
-              headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]})
-          with urllib.request.urlopen(request, timeout=60) as response:
-              token = json.load(response)["value"]
-          print("::add-mask::" + token)
-          body = json.dumps({"productId": product_id, "artifactSha256": artifact_sha256, "artifactName": artifact.name}).encode()
-          request = urllib.request.Request(os.environ["BILLIXI_PROOF_ENDPOINT"], data=body,
-              headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
-          with urllib.request.urlopen(request, timeout=60) as response:
-              response.read()
-          del token
-      - name: Publish the same file as a GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          gh release create "v$RELEASE_VERSION" "$BILLIXI_ARTIFACT_PATH" --title "v$RELEASE_VERSION" --target "$GITHUB_SHA"
+          TAG_NAME="v1.0.0"
+          git tag -f "\x24TAG_NAME"
+          git push origin "\x24TAG_NAME" --force
+          if gh release view "\x24TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "\x24TAG_NAME" focuspulse_pro_v1.0.zip --clobber
+          else
+            gh release create "\x24TAG_NAME" focuspulse_pro_v1.0.zip --title "FocusPulse Pro v1.0.0" --notes "Official FocusPulse Pro v1.0.0 release built with GitHub Actions and SLSA Build Provenance for Billixi."
+          fi
