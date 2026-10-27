@@ -1,6 +1,13 @@
 {
-  "schema": "billixi-build-config/v1",
-  "product_id": "ae7a8d3c-9e42-4b3d-b50f-597035147069",
-  "output_path": "focuspulse_pro_v1.0.zip",
-  "build_command": "zip -r focuspulse_pro_v1.0.zip focuspulse_pro.html license_manager.py sample_license_keys.txt README.md"
+  "runtime": "custom",
+  "runner": "ubuntu-24.04",
+  "toolVersion": "3.12",
+  "workingDirectory": ".",
+  "buildCommand": "bash scripts/build-release.sh",
+  "outputPath": "release/focuspulse_pro_v1.0.0.zip",
+  "version": "1.0.0",
+  "shell": "bash",
+  "submodules": false,
+  "lfs": false,
+  "signingSecrets": false
 }
