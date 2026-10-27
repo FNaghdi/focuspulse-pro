@@ -1,0 +1,19 @@
+name: Billixi product file
+run-name: billixi-${{ inputs.attempt_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      attempt_id:
+        required: true
+        type: string
+permissions: {}
+jobs:
+  product:
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    uses: EhsanJalilvand/billixi-product-builds/.github/workflows/billixi-product-build.yml@cbf0bec565e5b3a98286d3b054192384353e8019
+    with:
+      attempt_id: ${{ inputs.attempt_id }}
+      api_url: 'https://api.billixi.com/api/v1/payment/source-providers/github/builds'
